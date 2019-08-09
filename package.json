@@ -1,0 +1,31 @@
+{
+  "name": "HotelApp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "start:dev": "./node_modules/.bin/nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmularski/HotelApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jmularski/HotelApp/issues"
+  },
+  "homepage": "https://github.com/jmularski/HotelApp#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "twilio": "^3.33.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}
