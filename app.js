@@ -17,7 +17,7 @@ const client = require('twilio')(
 );
 
 const rapidApiConfig = require('./rapid-api.config').default;
-// const twillioConfig = require('./twilio.config').default;
+const twillioConfig = require('./twilio.config').default;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -30,23 +30,21 @@ let call_status = false;
 
 function unknown_response(data) {
   unknown_data = data;
+  console.log('clinet calls');
   client.calls
-    .create({
-      url: `${process.env.TUNNELED_URL}/twilio`,
-      to: '+48785757810',
-      from: process.env.TWILIO_PHONE,
-      statusCallback: `${process.env.TUNNELED_URL}/event`,
-      statusCallbackEvent: ['completed'],
-    })
+    .create(twillioConfig)
     .then(call => {
       setInterval(() => {
         if (call_status) {
           call_status = false;
+          console.log(final_translation);
           return final_translation;
         }
       }, 1000);
     })
     .catch(err => console.log(err));
+
+  console.log('calls end');
 }
 
 app.post('/event', (req, res) => {
@@ -88,16 +86,20 @@ app.post('/twilio', async (req, res) => {
 });
 
 function callTaxi({ date, addressFrom }) {
-  unknown_response(
-    `I need a taxi from ${addressFrom} to hotel at ${date}`
-  );
+  console.log('call taxi');
+  unknown_response(`I need a taxi from ${addressFrom} to hotel at ${date}`);
 }
 
 async function botResponseLoader(intentName, queryText, parameters) {
+  console.log(intentName);
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
-    return { fulfillmentText: `The cheapest room with given parameters costs ${await booking(parameters)}, do you want to book it?` };
+    return {
+      fulfillmentText: `The cheapest room with given parameters costs ${await booking(
+        parameters
+      )}, do you want to book it?`,
+    };
   if (intentName === 'booking.taxi')
     return { fulfillmentText: callTaxi(parameters) };
 }
