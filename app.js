@@ -11,6 +11,7 @@ const translate = new Translate({
   keyFilename: './translation.json',
 });
 const unirest = require('unirest');
+const axios = require('axios');
 const client = require('twilio')(
   process.env.TWILIO_SID,
   process.env.AUTH_TOKEN
@@ -44,7 +45,7 @@ function unknown_response(data) {
       setInterval(() => {
         if (call_status) {
           call_status = false;
-          console.log(final_translation);
+          //   console.log(final_translation);
           return final_translation;
         }
       }, 1000);
@@ -60,7 +61,7 @@ app.post('/event', (req, res) => {
 app.post('/unknownquestionresponse', async (req, res) => {
   const speechData = req.body.SpeechResult;
 
-  console.log(speechData);
+  //   console.log(speechData);
 
   try {
     let [translations] = await translate.translate(speechData, 'it');
@@ -90,66 +91,107 @@ app.post('/twilio', async (req, res) => {
 });
 
 function callTaxi({ time, addressFrom, addressTo }) {
-    unknown_response(`I need a taxi from ${addressFrom} to ${addressTo} at ${time}`);
-};
+  unknown_response(
+    `I need a taxi from ${addressFrom} to ${addressTo} at ${time}`
+  );
+}
 
 async function botResponseLoader(intentName, queryText, parameters) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
-    return { fulfillmentText: await booking(parameters).toString() };
+    return { fulfillmentText: await booking(parameters) };
   if (intentName === 'booking.taxi')
-    return { fulfillmentText: callTaxi(parameters)}
+    return { fulfillmentText: callTaxi(parameters) };
 }
 
-app.post('/dialogFlow', (req, res) => {
+app.post('/dialogFlow', async (req, res) => {
   const query = req.body.queryResult;
   const queryText = query.queryText;
   const intentName = query.intent.displayName;
 
-  console.log(query);
-  console.log(intentName);
+  //   console.log(query);
+  //   console.log(intentName);
 
-  res.send(botResponseLoader(intentName, queryText, query.parameters));
+  res.send(await botResponseLoader(intentName, queryText, query.parameters));
 });
 
+const createQueryParams = (date, adults) => ({
+  languagecode: 'en-us',
+  travel_purpose: 'leisure',
+  rec_children_qty: '1,1',
+  rec_children_age: '5,7',
+  recommend_for: '3',
+  rec_guest_qty: '2,2',
+  hotel_id: '241493',
+  arrival_date: '2019-10-11',
+  departure_date: '2019-10-14',
+});
+
+// const getCheapestRoomPrice =  result => {
+//   const body = result.body[0];
+
+//   const cheapestBlockId = body.cheapest_block_id;
+//   const cheapestBlock = body.block.find(
+//     block => block.block_id === cheapestBlockId
+//   );
+
+//   return cheapestBlock.min_price.price;
+// };
+
 async function booking({ date, adults }) {
-//   console.log(date, adults);
+  //   console.log(date, adults);
   let minPrice;
-    await unirest
-    .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
-    .query({
-      languagecode: 'en-us',
-      travel_purpose: 'leisure',
-      rec_children_qty: '1,1',
-      rec_children_age: '5,7',
-      recommend_for: '3',
-      rec_guest_qty: '2,2',
-      hotel_id: '241493',
-      arrival_date: '2019-10-11',
-      departure_date: '2019-10-14',
-    })
-    .headers(rapidApiConfig)
-    .end(result => {
-      if (result.error) throw new Error(result.error);
+  try {
+    console.log('tesqt');
+    const { data } = await axios.get(
+      `${process.env.RAPID_API_HOST}/properties/get-rooms`,
+      { params: createQueryParams(), headers: rapidApiConfig }
+    );
+    console.log(data);
+    // minPrice = await getCheapestRoomPrice(data);
+    const body = data[0];
 
-      const body = result.body[0];
+    const cheapestBlockId = body.cheapest_block_id;
+    const cheapestBlock = body.block.find(
+      block => block.block_id === cheapestBlockId
+    );
 
-      const cheapestBlockId = body.cheapest_block_id;
-      const cheapestBlock = body.block.find(
-        block => block.block_id === cheapestBlockId
-      );
-
-        minPrice = cheapestBlock.min_price.price;
-    //   console.log(minPrice, 1);
-    //   return minPrice;
-    });
-
-    await console.log(minPrice.toString());
+    minPrice = cheapestBlock.min_price.price;
+    console.log(minPrice);
+  } catch (error) {
+    throw new Error(error);
+  } finally {
     return minPrice.toString();
+  }
 
+  //   await unirest
+  //     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
+  //     .query(createQueryParams())
+  //     .headers(rapidApiConfig)
+  //     .end(result => {
+  //       if (result.error) throw new Error(result.error);
 
-    // console.log(test);
+  //       const body = result.body[0];
+
+  //       const cheapestBlockId = body.cheapest_block_id;
+  //       const cheapestBlock = body.block.find(
+  //         block => block.block_id === cheapestBlockId
+  //       );
+
+  //       minPrice = cheapestBlock.min_price.price;
+  //       return new Promise(
+  //         (resolve, reject) => resolve => {
+  //           minPrice = cheapestBlock.min_price.price.toString();
+  //         },
+  //         false
+  //       );
+  //     });
+
+  // await console.log(minPrice.toString());
+  //   return minPrice.toString();
+
+  // console.log(test);
 }
 
 app.listen(3000, () => console.log('Running on 3000!'));
