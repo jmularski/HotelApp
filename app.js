@@ -114,10 +114,9 @@ app.post('/dialogFlow', (req, res) => {
 });
 
 async function booking({ date, adults }) {
-  console.log(date, adults);
-
+//   console.log(date, adults);
   let minPrice;
-  await unirest
+    await unirest
     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
     .query({
       languagecode: 'en-us',
@@ -141,9 +140,16 @@ async function booking({ date, adults }) {
         block => block.block_id === cheapestBlockId
       );
 
-      minPrice = cheapestBlock.min_price.price;
+        minPrice = cheapestBlock.min_price.price;
+    //   console.log(minPrice, 1);
+    //   return minPrice;
     });
-  return minPrice;
+
+    await console.log(minPrice.toString());
+    return minPrice.toString();
+
+
+    // console.log(test);
 }
 
 app.listen(3000, () => console.log('Running on 3000!'));
