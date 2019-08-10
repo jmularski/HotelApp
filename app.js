@@ -108,11 +108,10 @@ app.post('/dialogFlow', (req, res) => {
 });
 
 function booking({ date, adults }) {
-  console.log(parameters);
-
   console.log(date, adults);
 
-  const cheapestRoom = unirest
+  let minPrice;
+  unirest
     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
     .query({
       languagecode: 'en-us',
@@ -136,14 +135,9 @@ function booking({ date, adults }) {
         block => block.block_id === cheapestBlockId
       );
 
-      const minPrice = cheapestBlock.min_price.price;
-
-      // console.log(cheapestBlock);
-      //   console.log(minPrice);
-      return minPrice;
+      minPrice = cheapestBlock.min_price.price;
     });
-
-  return cheapestRoom;
+  return minPrice;
 }
 
 app.listen(3000, () => console.log('Running on 3000!'));
