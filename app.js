@@ -90,6 +90,7 @@ app.post('/twilio', async (req, res) => {
 function botResponseLoader(intentName, queryText) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
+  //if (intentName === '')
 }
 
 app.post('/dialogFlow', (req, res) => {
@@ -97,13 +98,13 @@ app.post('/dialogFlow', (req, res) => {
   const queryText = query.queryText;
   const intentName = query.intent.displayName;
 
+  console.log(query);
   console.log(intentName);
 
   res.send(botResponseLoader(intentName, queryText));
 });
 
-app.get('/booking', (req, res) => {
-
+function booking(){
   unirest
     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
     .query({
@@ -133,6 +134,6 @@ app.get('/booking', (req, res) => {
       // console.log(cheapestBlock);
       console.log(minPrice);
     });
-});
+};
 
 app.listen(3000, () => console.log('Running on 3000!'));
