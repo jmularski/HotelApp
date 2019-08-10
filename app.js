@@ -10,7 +10,6 @@ const translate = new Translate({
   projectId: process.env.GCP_PROJECT_ID,
   keyFilename: './translation.json',
 });
-const unirest = require('unirest');
 const axios = require('axios');
 const client = require('twilio')(
   process.env.TWILIO_SID,
