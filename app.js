@@ -103,49 +103,36 @@ app.post('/dialogFlow', (req, res) => {
 });
 
 app.get('/booking', (req, res) => {
-  //   unirest
-  //     .post(process.env.RAPID_API_HOST)
-  //     .header('x-rapidapi-key', process.env.RAPID_API_KEY)
-  //     .header('x-rapidapi-host', process.env.RAPID_API_HOST)
-  //     .end(result => {
-  //       console.log(result.status, result.headers, result.body);
-  //     });
-  // console.log(rapidApiConfig);
 
-  const apiCall = unirest(
-    'GET',
-    `${process.env.RAPID_API_HOST}/properties/get-rooms`
-  );
+  unirest
+    .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
+    .query({
+      languagecode: 'en-us',
+      travel_purpose: 'leisure',
+      rec_children_qty: '1,1',
+      rec_children_age: '5,7',
+      recommend_for: '3',
+      rec_guest_qty: '2,2',
+      hotel_id: '241493',
+      arrival_date: '2019-10-11',
+      departure_date: '2019-10-14',
+    })
+    .headers(rapidApiConfig)
+    .end(result => {
+      if (result.error) throw new Error(result.error);
 
-  apiCall.query({
-    languagecode: 'en-us',
-    travel_purpose: 'leisure',
-    rec_children_qty: '1,1',
-    rec_children_age: '5,7',
-    recommend_for: '3',
-    rec_guest_qty: '2,2',
-    hotel_id: '241493',
-    arrival_date: '2019-10-11',
-    departure_date: '2019-10-14',
-  });
+      const body = result.body[0];
 
-  apiCall.headers(rapidApiConfig);
+      const cheapestBlockId = body.cheapest_block_id;
+      const cheapestBlock = body.block.find(
+        block => block.block_id === cheapestBlockId
+      );
 
-  apiCall.end(result => {
-    if (result.error) throw new Error(result.error);
+      const minPrice = cheapestBlock.min_price.price;
 
-    const body = result.body[0];
-
-    const cheapestBlockId = body.cheapest_block_id;
-    const cheapestBlock = body.block.find(
-      block => block.block_id === cheapestBlockId
-    );
-
-    const minPrice = cheapestBlock.min_price.price;
-
-    // console.log(cheapestBlock);
-    console.log(minPrice);
-  });
+      // console.log(cheapestBlock);
+      console.log(minPrice);
+    });
 });
 
 app.listen(3000, () => console.log('Running on 3000!'));
