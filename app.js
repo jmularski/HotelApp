@@ -113,13 +113,11 @@ app.post('/dialogFlow', async (req, res) => {
 const createQueryParams = (date, adults) => ({
   languagecode: 'en-us',
   travel_purpose: 'leisure',
-  rec_children_qty: '1,1',
-  rec_children_age: '5,7',
   recommend_for: '3',
-  rec_guest_qty: '2,2',
+  rec_guest_qty: `${adults}, 1`,
   hotel_id: '241493',
-  arrival_date: '2019-10-11',
-  departure_date: '2019-10-14',
+  arrival_date: date.startDate,
+  departure_date: date.endDate,
 });
 
 async function booking({ date, adults }) {
