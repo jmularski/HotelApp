@@ -26,22 +26,20 @@ let unknown_data = '';
 let final_translation = '';
 let call_status = false;
 
+const handleTranslation = () =>
+  setInterval(() => {
+    if (call_status) {
+      call_status = false;
+      return final_translation;
+    }
+  }, 1000);
+
 function unknown_response(data) {
   unknown_data = data;
-  console.log('clinet calls');
   client.calls
     .create(twillioConfig)
-    .then(() => {
-      setInterval(() => {
-        if (call_status) {
-          call_status = false;
-          return final_translation;
-        }
-      }, 1000);
-    })
+    .then(handleTranslation)
     .catch(error => console.log(error));
-
-  console.log('calls end');
 }
 
 app.post('/event', (req, res) => {
@@ -52,14 +50,12 @@ app.post('/event', (req, res) => {
 app.post('/unknownquestionresponse', async (req, res) => {
   const speechData = req.body.SpeechResult;
 
-  console.log(speechData);
-
   try {
     let [translations] = await translate.translate(speechData, 'it');
     final_translation = translations;
     res.sendStatus(200);
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    throw new Error(error);
   }
 });
 
