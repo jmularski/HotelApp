@@ -107,7 +107,7 @@ app.post('/dialogFlow', (req, res) => {
   res.send(botResponseLoader(intentName, queryText, query.parameters));
 });
 
-function booking({ parameters: { date, adults } }) {
+function booking({ date, adults }) {
   console.log(parameters);
 
   console.log(date, adults);
