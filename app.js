@@ -100,7 +100,7 @@ async function botResponseLoader(intentName, queryText, parameters) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
-    return { fulfillmentText: await booking(parameters) };
+    return { fulfillmentText: `The cheapest room with given parameters costs ${await booking(parameters)}, do you want to book it?` };
   if (intentName === 'booking.taxi')
     return { fulfillmentText: callTaxi(parameters) };
 }
@@ -109,9 +109,6 @@ app.post('/dialogFlow', async (req, res) => {
   const query = req.body.queryResult;
   const queryText = query.queryText;
   const intentName = query.intent.displayName;
-
-  //   console.log(query);
-  //   console.log(intentName);
 
   res.send(await botResponseLoader(intentName, queryText, query.parameters));
 });
@@ -127,17 +124,6 @@ const createQueryParams = (date, adults) => ({
   arrival_date: '2019-10-11',
   departure_date: '2019-10-14',
 });
-
-// const getCheapestRoomPrice =  result => {
-//   const body = result.body[0];
-
-//   const cheapestBlockId = body.cheapest_block_id;
-//   const cheapestBlock = body.block.find(
-//     block => block.block_id === cheapestBlockId
-//   );
-
-//   return cheapestBlock.min_price.price;
-// };
 
 async function booking({ date, adults }) {
   //   console.log(date, adults);
@@ -164,34 +150,6 @@ async function booking({ date, adults }) {
   } finally {
     return minPrice.toString();
   }
-
-  //   await unirest
-  //     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
-  //     .query(createQueryParams())
-  //     .headers(rapidApiConfig)
-  //     .end(result => {
-  //       if (result.error) throw new Error(result.error);
-
-  //       const body = result.body[0];
-
-  //       const cheapestBlockId = body.cheapest_block_id;
-  //       const cheapestBlock = body.block.find(
-  //         block => block.block_id === cheapestBlockId
-  //       );
-
-  //       minPrice = cheapestBlock.min_price.price;
-  //       return new Promise(
-  //         (resolve, reject) => resolve => {
-  //           minPrice = cheapestBlock.min_price.price.toString();
-  //         },
-  //         false
-  //       );
-  //     });
-
-  // await console.log(minPrice.toString());
-  //   return minPrice.toString();
-
-  // console.log(test);
 }
 
 app.listen(3000, () => console.log('Running on 3000!'));
