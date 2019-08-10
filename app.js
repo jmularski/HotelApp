@@ -89,11 +89,17 @@ app.post('/twilio', async (req, res) => {
   res.send(voiceResponse);
 });
 
+function callTaxi({ time, addressFrom, addressTo }) {
+    unknown_response(`I need a taxi from ${addressFrom} to ${addressTo} at ${time}`);
+};
+
 async function botResponseLoader(intentName, queryText, parameters) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
     return { fulfillmentText: await booking(parameters).toString() };
+  if (intentName === 'booking.taxi')
+    return { fulfillmentText: callTaxi(parameters)}
 }
 
 app.post('/dialogFlow', (req, res) => {
