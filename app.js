@@ -89,11 +89,11 @@ app.post('/twilio', async (req, res) => {
   res.send(voiceResponse);
 });
 
-function botResponseLoader(intentName, queryText, parameters) {
+async function botResponseLoader(intentName, queryText, parameters) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
-    return { fulfillmentText: booking(parameters) };
+    return { fulfillmentText: await booking(parameters) };
 }
 
 app.post('/dialogFlow', (req, res) => {
@@ -107,11 +107,11 @@ app.post('/dialogFlow', (req, res) => {
   res.send(botResponseLoader(intentName, queryText, query.parameters));
 });
 
-function booking({ date, adults }) {
+async function booking({ date, adults }) {
   console.log(date, adults);
 
   let minPrice;
-  unirest
+  await unirest
     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
     .query({
       languagecode: 'en-us',
