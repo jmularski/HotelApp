@@ -93,7 +93,7 @@ function botResponseLoader(intentName, queryText, parameters) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
-    return { fulfillmentText: booking(parameters) };
+    return { fulfillmentText: booking(parameters).toString() };
 }
 
 app.post('/dialogFlow', (req, res) => {
@@ -108,8 +108,6 @@ app.post('/dialogFlow', (req, res) => {
 });
 
 function booking({ date, adults }) {
-  console.log(parameters);
-
   console.log(date, adults);
 
   const cheapestRoom = unirest
@@ -142,8 +140,6 @@ function booking({ date, adults }) {
       //   console.log(minPrice);
       return minPrice;
     });
-
-  return cheapestRoom;
 }
 
 app.listen(3000, () => console.log('Running on 3000!'));
