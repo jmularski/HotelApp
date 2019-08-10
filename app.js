@@ -53,9 +53,7 @@ app.post('/twilio', async (req, res) => {
   const voiceResponse = `<?xml version="1.0" encoding="UTF-8"?>
     <Response>
         <Say>${translations}</Say>
-        <Gather input="speech" action="${
-          process.env.TUNNELED_URL
-        }/unknownquestionresponse">
+        <Gather input="speech" action="${process.env.TUNNELED_URL}/unknownquestionresponse">
             <Say>Per favore, rispondi alla domanda</Say>
         </Gather>
     </Response>
@@ -64,7 +62,7 @@ app.post('/twilio', async (req, res) => {
   res.send(voiceResponse);
 });
 
-app.post('/dialogFlow', (req, res) => {
+app.post('/dialogflow', (req, res) => {
   const body = req.body;
   // const intent = body.intent;
   // const intentName = intent.name;
