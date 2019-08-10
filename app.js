@@ -23,7 +23,7 @@ const rapidApiConfig = require('./rapid-api.config').default;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-let unknown_data = 'Hello world!';
+let unknown_data = '';
 let final_translation = '';
 let call_status = false;
 
@@ -40,12 +40,9 @@ function unknown_response(data) {
       statusCallbackEvent: ['completed'],
     })
     .then(call => {
-      // const queueLength = callersQueue.length;
-      // callersQueue.push
       setInterval(() => {
         if (call_status) {
           call_status = false;
-          //   console.log(final_translation);
           return final_translation;
         }
       }, 1000);
@@ -61,11 +58,12 @@ app.post('/event', (req, res) => {
 app.post('/unknownquestionresponse', async (req, res) => {
   const speechData = req.body.SpeechResult;
 
-  //   console.log(speechData);
+  console.log(speechData);
 
   try {
     let [translations] = await translate.translate(speechData, 'it');
     final_translation = translations;
+    res.sendStatus(200);
   } catch (e) {
     console.log(e);
   }
@@ -78,11 +76,11 @@ app.post('/twilio', async (req, res) => {
 
   const voiceResponse = `<?xml version="1.0" encoding="UTF-8"?>
     <Response>
-        <Say>${translations}</Say>
+        <Say language="it">${translations}</Say>
         <Gather input="speech" action="${
           process.env.TUNNELED_URL
         }/unknownquestionresponse">
-            <Say>Per favore, rispondi alla domanda</Say>
+            <Say language="it">Per favore, rispondi alla domanda</Say>
         </Gather>
     </Response>
     `;
@@ -90,9 +88,9 @@ app.post('/twilio', async (req, res) => {
   res.send(voiceResponse);
 });
 
-function callTaxi({ time, addressFrom, addressTo }) {
+function callTaxi({ date, addressFrom }) {
   unknown_response(
-    `I need a taxi from ${addressFrom} to ${addressTo} at ${time}`
+    `I need a taxi from ${addressFrom} to hotel at ${date}`
   );
 }
 
