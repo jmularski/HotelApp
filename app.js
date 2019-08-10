@@ -127,7 +127,7 @@ async function booking({ date, adults }) {
     console.log('tesqt');
     const { data } = await axios.get(
       `${process.env.RAPID_API_HOST}/properties/get-rooms`,
-      { params: createQueryParams(), headers: rapidApiConfig }
+      { params: createQueryParams(date, adults), headers: rapidApiConfig }
     );
     console.log(data);
     // minPrice = await getCheapestRoomPrice(data);
