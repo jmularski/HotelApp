@@ -26,23 +26,20 @@ let unknown_data = '';
 let final_translation = '';
 let call_status = false;
 
-// let callersQueue = [];
-
 function unknown_response(data) {
   unknown_data = data;
   console.log('clinet calls');
   client.calls
     .create(twillioConfig)
-    .then(call => {
+    .then(() => {
       setInterval(() => {
         if (call_status) {
           call_status = false;
-          console.log(final_translation);
           return final_translation;
         }
       }, 1000);
     })
-    .catch(err => console.log(err));
+    .catch(error => console.log(error));
 
   console.log('calls end');
 }
@@ -86,7 +83,6 @@ app.post('/twilio', async (req, res) => {
 });
 
 function callTaxi({ date, addressFrom }) {
-  console.log('call taxi');
   unknown_response(`I need a taxi from ${addressFrom} to hotel at ${date}`);
 }
 
@@ -96,9 +92,7 @@ async function botResponseLoader(intentName, queryText, parameters) {
     return { fulfillmentText: unknown_response(queryText) };
   if (intentName === 'booking.create')
     return {
-      fulfillmentText: `The cheapest room with given parameters costs ${await booking(
-        parameters
-      )}, do you want to book it?`,
+      fulfillmentText: await booking(parameters),
     };
   if (intentName === 'booking.taxi')
     return { fulfillmentText: callTaxi(parameters) };
@@ -112,40 +106,50 @@ app.post('/dialogFlow', async (req, res) => {
   res.send(await botResponseLoader(intentName, queryText, query.parameters));
 });
 
-const createQueryParams = (date, adults) => ({
-  languagecode: 'en-us',
-  travel_purpose: 'leisure',
-  recommend_for: '3',
-  rec_guest_qty: `${adults}, 1`,
-  hotel_id: '241493',
-  arrival_date: date.startDate,
-  departure_date: date.endDate,
-});
+const createQueryParams = (date, adults) => {
+  const arrival_date = date.startDate.slice(0, 10);
+  const departure_date = date.endDate.slice(0, 10);
+
+  return {
+    languagecode: 'en-us',
+    travel_purpose: 'leisure',
+    recommend_for: '3',
+    rec_guest_qty: `${adults}, 1`,
+    hotel_id: '241493',
+    arrival_date,
+    departure_date,
+  };
+};
+
+const getCheapestRoomPrice = async data => {
+  const body = data[0];
+
+  const cheapestBlockId = body.cheapest_block_id;
+  const cheapestBlock = body.block.find(
+    block => block.block_id === cheapestBlockId
+  );
+
+  if (cheapestBlock === undefined) {
+    return 'All rooms are booked, choose different date';
+  } else {
+    return `The cheapest room with given parameters costs ${
+      cheapestBlock.min_price.price
+    } ${cheapestBlock.min_price.currency}, do you want to book it?`;
+  }
+};
 
 async function booking({ date, adults }) {
-  //   console.log(date, adults);
-  let minPrice;
+  let outputMessage = '';
   try {
-    console.log('tesqt');
     const { data } = await axios.get(
       `${process.env.RAPID_API_HOST}/properties/get-rooms`,
       { params: createQueryParams(date, adults), headers: rapidApiConfig }
     );
-    console.log(data);
-    // minPrice = await getCheapestRoomPrice(data);
-    const body = data[0];
-
-    const cheapestBlockId = body.cheapest_block_id;
-    const cheapestBlock = body.block.find(
-      block => block.block_id === cheapestBlockId
-    );
-
-    minPrice = cheapestBlock.min_price.price;
-    console.log(minPrice);
+    outputMessage = await getCheapestRoomPrice(data);
   } catch (error) {
     throw new Error(error);
   } finally {
-    return minPrice.toString();
+    return outputMessage.toString();
   }
 }
 
