@@ -78,7 +78,9 @@ app.post('/twilio', async (req, res) => {
   const voiceResponse = `<?xml version="1.0" encoding="UTF-8"?>
     <Response>
         <Say>${translations}</Say>
-        <Gather input="speech" action="${process.env.TUNNELED_URL}/unknownquestionresponse">
+        <Gather input="speech" action="${
+          process.env.TUNNELED_URL
+        }/unknownquestionresponse">
             <Say>Per favore, rispondi alla domanda</Say>
         </Gather>
     </Response>
@@ -87,10 +89,11 @@ app.post('/twilio', async (req, res) => {
   res.send(voiceResponse);
 });
 
-function botResponseLoader(intentName, queryText) {
+function botResponseLoader(intentName, queryText, parameters) {
   if (intentName === 'Default Fallback Intent')
     return { fulfillmentText: unknown_response(queryText) };
-  //if (intentName === '')
+  if (intentName === 'booking.create')
+    return { fulfillmentText: booking(parameters) };
 }
 
 app.post('/dialogFlow', (req, res) => {
@@ -101,11 +104,15 @@ app.post('/dialogFlow', (req, res) => {
   console.log(query);
   console.log(intentName);
 
-  res.send(botResponseLoader(intentName, queryText));
+  res.send(botResponseLoader(intentName, queryText, query.parameters));
 });
 
-function booking(){
-  unirest
+function booking({ parameters: { date, adults } }) {
+  console.log(parameters);
+
+  console.log(date, adults);
+
+  const cheapestRoom = unirest
     .get(`${process.env.RAPID_API_HOST}/properties/get-rooms`)
     .query({
       languagecode: 'en-us',
@@ -132,8 +139,11 @@ function booking(){
       const minPrice = cheapestBlock.min_price.price;
 
       // console.log(cheapestBlock);
-      console.log(minPrice);
+      //   console.log(minPrice);
+      return minPrice;
     });
-};
+
+  return cheapestRoom;
+}
 
 app.listen(3000, () => console.log('Running on 3000!'));
